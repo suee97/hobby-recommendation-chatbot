@@ -1,0 +1,11 @@
+POST http://localhost:8000/chat
+Content-Type: application/json
+
+{
+    "token": "7KFMxgpKfHm1O7I6fYly",
+    "message": "그거 배우고 싶은데 어떻게 해야해?"
+}
+
+# 새로운 토큰으로 아까 말하던거 이어서 말하기
+# => python이 아닌 일반적인 답변
+# => 세션 관리, 대화 이력 유지 테스트 성공
