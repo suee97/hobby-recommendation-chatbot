@@ -104,6 +104,13 @@ def chat_post(req: ChatRequestModel):
         if chunk.choices[0].delta.content is not None:
             answer += chunk.choices[0].delta.content
     
+    # =================== [ AI 답변 확인 코드 ] ===================
+    print("\n" + "="*60)
+    print("🤖 AI의 원본 답변:", answer)
+    print("="*60 + "\n")
+    # ==========================================================
+
+
     # AI 응답을 히스토리에 추가
     history.append({"role": "assistant", "content": answer})
     
@@ -120,6 +127,11 @@ def chat_post(req: ChatRequestModel):
         # 완료 상태 업데이트
         if "is_complete" in response_data:
             session_data[4] = response_data["is_complete"]
+    else:
+        # 파싱 실패 시 예외 처리 (예: 사용자에게 재질문 유도)
+        response_data = {"is_complete": False, "message": "죄송해요, 답변을 이해하지 못했어요. 다시 한번 말씀해주시겠어요?"}
+        summary = ""
+        recommended_hobby = ""
     
     # 타임스탬프 업데이트
     session_data[1] = datetime.now()
