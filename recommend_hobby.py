@@ -79,17 +79,23 @@ class Hobby_recommender:
     # 3. 추천 취미에 도움될 만한 정보 조회(RAG)
     params = {
       "engine": "google",
-      "num": "4",
+      "num": "5",
       "api_key": self.serp_api_key
     }
     
     for hobby in recommended_hobbies:
-      params["q"] = f"Tell me helpful information for {hobby.eng_name} beginners"
+      print("="*30)
+      print(f"{hobby} 검색중 ...")
+      params["q"] = f"{hobby.eng_name} beginner tips"
 
       search = GoogleSearch(params)
       search_result = search.get_dict()
 
       # 검색 결과를 로드
+      if "organic_results" not in search_result:
+        print("SerpAPI 응답:", search_result)
+        raise Exception(f"SerpAPI 결과에 'organic_results'가 없습니다: {search_result}")
+
       urls = [ result["link"] for result in search_result["organic_results"]]
 
       loader = UnstructuredURLLoader(urls=urls)
