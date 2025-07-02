@@ -79,7 +79,7 @@ class Hobby_recommender:
     # 3. 추천 취미에 도움될 만한 정보 조회(RAG)
     params = {
       "engine": "google",
-      "num": "5",
+      "num": "10",
       "api_key": self.serp_api_key
     }
     
@@ -91,20 +91,26 @@ class Hobby_recommender:
       search = GoogleSearch(params)
       search_result = search.get_dict()
 
-      # 검색 결과를 로드
-      if "organic_results" not in search_result:
-        print("SerpAPI 응답:", search_result)
-        raise Exception(f"SerpAPI 결과에 'organic_results'가 없습니다: {search_result}")
+      # 1. organic_results 우선
+      urls = []
+      if "organic_results" in search_result and search_result["organic_results"]:
+          urls = [result["link"] for result in search_result["organic_results"]]
 
-      urls = [ result["link"] for result in search_result["organic_results"]]
-
-      loader = UnstructuredURLLoader(urls=urls)
+      # 3. 그래도 없으면 안내 메시지
+      if not urls:
+          print("검색 결과에 사용할 수 있는 링크가 없습니다:", search_result)
+          # 예외를 발생시키지 않고, 안내 메시지나 빈 결과로 처리
+          hobby.set_additional_info("검색 결과가 충분하지 않습니다. 구글/유튜브/포럼 등에서 직접 정보를 찾아보세요.")
+          continue
+      
+      loader = UnstructuredURLLoader(urls=urls[:2])
       data = loader.load()
 
       # text split
       text_splitter = RecursiveCharacterTextSplitter(
           chunk_size=200,
-          chunk_overlap=50)
+          chunk_overlap=50
+      )
 
       splits = text_splitter.split_documents(data)
 
@@ -130,8 +136,16 @@ class Hobby_recommender:
 
       # Prompt
       system = """
-      You must answer in Korean. Think of the user as a beginner who enjoys this hobby, and provide information that would be helpful to them. Share places where they can get help, websites, or related knowledge. Answer in a friendly tone and respond in Korean.
+      You must answer in Korean.
+      Assume the user is a beginner who enjoys this hobby, and provide information that would be helpful for them.
+      Share places where they can get help, useful websites, or related knowledge.
+      Answer in a friendly tone and always respond in Korean.
+
+      Important:
+      - Never include error messages, access denied notices, advertisements, or irrelevant text (for example: 'on this server', 'Access Denied', 'Reference #', 'Forbidden', 'Not Found', etc.) in your answer.
+      - Only summarize and deliver information that is genuinely helpful for beginners.
       """
+      
       user = """
       Question: {question}
       Context: {context}
