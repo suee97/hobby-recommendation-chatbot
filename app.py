@@ -7,6 +7,7 @@ from openai import OpenAI
 from pydantic import BaseModel
 import os, random, string
 from datetime import datetime, timedelta
+from recommend_hobby import Hobby_recommender
 
 # 새로 추가된 모듈 import
 from hobby_service import HobbyRecommendationService
@@ -50,6 +51,12 @@ chat_storage = {
 class ChatRequestModel(BaseModel):
     token: str
     message: str
+
+class HobbyRecommenderModel(BaseModel):
+    token : str
+    user_desc : str
+    user_hobby : str
+
 
 # API
 @app.get("/generate-token")
@@ -121,6 +128,25 @@ def chat_post(req: ChatRequestModel):
     for token in keys_to_delete:
         del chat_storage[token]
 
+    return {"statusCode": 200, "data": {"answer": answer}}
+
+
+    # 있으면 llm에 보내기
+    # 성향 파악 끝인지 확인
+
+    return {"statusCode": 200, "data": {"미구현": "미구현"}}
+
+@app.post("/recommend-hobby")
+def chat_post(req: HobbyRecommenderModel):
+    # 토큰 존재하는지 확인, 없으면 에러
+    # if req.token not in chat_storage:
+    #     return {"statusCode": 400, "errorMessage": "서버에 존재하지 않는 토큰입니다."}
+
+    hobby_recommender = Hobby_recommender(os.getenv("SERPAPI_API_KEY"))
+    result = hobby_recommender.recommend(req.user_desc, req.user_hobby)
+
+
+    return result
     # 응답 데이터 구성
     response = {
         "answer": answer,
