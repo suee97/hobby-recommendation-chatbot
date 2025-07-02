@@ -1,9 +1,10 @@
 # 다음 명령어로 설치 필요
 # pip install fastapi uvicorn openai python-dotenv
+
 # 이제 pip install -r requirements.txt로 간단하게 설치할 수 있습니다.
-# 가상환경 설정이 필요하다면 (컴퓨터안에 있는 fastapi, openai등의 버전을 지키고 싶다면)
-# notion의 python 가상환경 설정을 참고해주세요.
+# 가상환경 설정이 필요하다면 notion의 python 가상환경 설정을 참고해주세요.
 # 추가: .env 파일에 SOLAR_LLM_API_KEY = '받은 API KEY' 추가해주세요.
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv

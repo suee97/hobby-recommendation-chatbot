@@ -1,3 +1,7 @@
+# 필요한 라이브러리는 pip install -r requirements.txt로 간단하게 설치할 수 있습니다.
+# 가상환경 설정이 필요하다면 notion의 python 가상환경 설정을 참고해주세요.
+# 추가: .env 파일에 SOLAR_LLM_API_KEY = '받은 API KEY' 추가해주세요.
+
 import os
 from pprint import pprint
 from dotenv import load_dotenv
