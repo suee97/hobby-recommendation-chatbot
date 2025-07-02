@@ -133,16 +133,32 @@ def chat_post(req: ChatRequestModel):
     for token in keys_to_delete:
         del chat_storage[token]
 
-    return {"statusCode": 200, "data": {"answer": answer}}
+
+    # 대화 종료 전
+    if response_data["is_complete"] is not None and not response_data["is_complete"]:
+        return {"statusCode": 200, "data": {
+            "response_data": response_data,
+            "message": response_data["message"],
+            "is_complete": response_data["is_complete"],
+            "summary": summary,
+            "recommended_hobby": recommended_hobby,
+        }}
+    
+    # 대화 종료
+    else:
+        recommend_req = HobbyRecommenderModel(
+            token=req.token,
+            user_desc=summary,
+            user_hobby="none"
+        )
+        result = recommend_post(recommend_req)
+        return {"statusCode": 200, "data": {"recommend_result": result}}
 
 
-    # 있으면 llm에 보내기
-    # 성향 파악 끝인지 확인
-
-    return {"statusCode": 200, "data": {"미구현": "미구현"}}
+    
 
 @app.post("/recommend-hobby")
-def chat_post(req: HobbyRecommenderModel):
+def recommend_post(req: HobbyRecommenderModel):
     # 토큰 존재하는지 확인, 없으면 에러
     # if req.token not in chat_storage:
     #     return {"statusCode": 400, "errorMessage": "서버에 존재하지 않는 토큰입니다."}
