@@ -79,6 +79,16 @@ def generate_token():
 
 @app.post("/chat")
 def chat_post(req: ChatRequestModel):
+
+    # 세션 30분 넘은 값들 지우기 (기존 로직 유지)
+    expire_delta = timedelta(minutes=30)
+    keys_to_delete = []
+    for token, data in chat_storage.items():
+        if datetime.now() - data[1] > expire_delta:
+            keys_to_delete.append(token)
+    for token in keys_to_delete:
+        del chat_storage[token]
+
     # 토큰 존재하는지 확인, 없으면 에러
     if req.token not in chat_storage:
         return {"statusCode": 400, "errorMessage": "서버에 존재하지 않는 토큰입니다."}
@@ -96,32 +106,78 @@ def chat_post(req: ChatRequestModel):
     history.append(newChat)
 
     # Solar LLM에 요청 보내고 응답 받기
-    stream = client.chat.completions.create(
+    response_format = {
+        "type": "json_schema",
+        "json_schema": {
+            "name": "tendency_chat",
+            "strict": True,
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "description": "assistant chat response"
+                    },
+                    "summary": {
+                        "type": "string",
+                        "description": "user tendency summary. (if completed)"
+                    },
+                    "recommended_hobby": {
+                        "type": "string",
+                        "description": "user tendency summary. (if completed)"
+                    },
+                    "question_count": {
+                        "type": "number",
+                        "description": "number of question"
+                    },
+                    "is_completed": {
+                        "type": "boolean",
+                        "description": "if completly grasp user tendency, then true else false"
+                    }
+                },
+                "required": ["message", "summary", "recommended_hobby", "question_count", "is_completed"]
+            }
+        }
+    }
+
+    response = client.chat.completions.create(
         model = "solar-mini",
         messages = history,
-        stream = True,
+        response_format = response_format,
+        # stream = True,
     )
-    answer = ''
-    for chunk in stream:
-        if chunk.choices[0].delta.content is not None:
-            answer += chunk.choices[0].delta.content
+    answerStr = response.choices[0].message.content
+    answer = json.loads(response.choices[0].message.content)
+    print(answer)
 
+    # answer = ''
+    # for chunk in stream:
+    #     if chunk.choices[0].delta.content is not None:
+    #         answer += chunk.choices[0].delta.content
+    # print(answer)
     # arguments_str = response.choices[0].message.function_call.arguments
     # result = json.loads(arguments_str)
     
     # =================== [ AI 답변 확인 코드 ] ===================
-    print("\n" + "="*60)
-    print("🤖 AI의 원본 답변:", answer)
-    print("="*60 + "\n")
+    # print("\n" + "="*60)
+    # print("🤖 AI의 원본 답변:", answer)
+    # print("="*60 + "\n")
     # ==========================================================
 
 
     # AI 응답을 히스토리에 추가
-    history.append({"role": "assistant", "content": answer})
+    history.append({"role": "assistant", "content": answerStr})
 
-    # AI 응답 파싱 및 세션 데이터 업데이트
-    response_data, summary, recommended_hobby = hobby_service.parse_ai_response(answer)
-    
+    # 성향 파악 미완료시
+    if answer["is_completed"] is False:
+        return {
+            "statusCode": 200,
+            "data": {
+                "message": answer["message"],
+                "question_count": answer["question_count"]
+            }
+        }
+
     if response_data:
         # 사용자 데이터 업데이트
         if "user_data" in response_data:
@@ -141,14 +197,7 @@ def chat_post(req: ChatRequestModel):
     # 타임스탬프 업데이트
     session_data[1] = datetime.now()
 
-    # 세션 30분 넘은 값들 지우기 (기존 로직 유지)
-    expire_delta = timedelta(minutes=30)
-    keys_to_delete = []
-    for token, data in chat_storage.items():
-        if datetime.now() - data[1] > expire_delta:
-            keys_to_delete.append(token)
-    for token in keys_to_delete:
-        del chat_storage[token]
+    
 
 
     # 대화 종료 전
