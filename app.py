@@ -96,28 +96,66 @@ def chat_post(req: ChatRequestModel):
     history.append(newChat)
 
     # Solar LLM에 요청 보내고 응답 받기
+    response_format = {
+        "type": "json_schema",
+        "json_schema": {
+            "name": "tendency_chat",
+            "strict": True,
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "description": "assistant chat response"
+                    },
+                    "summary": {
+                        "type": "string",
+                        "description": "user tendency summary. (if completed)"
+                    },
+                    "recommended_hobby": {
+                        "type": "string",
+                        "description": "user tendency summary. (if completed)"
+                    },
+                    "question_count": {
+                        "type": "number",
+                        "description": "number of question"
+                    },
+                    "is_completed": {
+                        "type": "boolean",
+                        "description": "if completly grasp user tendency, then true else false"
+                    }
+                },
+                "required": ["message", "summary", "recommended_hobby", "question_count", "is_completed"]
+            }
+        }
+    }
+
     stream = client.chat.completions.create(
         model = "solar-mini",
         messages = history,
+        response_format = response_format,
         stream = True,
     )
     answer = ''
     for chunk in stream:
         if chunk.choices[0].delta.content is not None:
             answer += chunk.choices[0].delta.content
-
+    print(answer)
     # arguments_str = response.choices[0].message.function_call.arguments
     # result = json.loads(arguments_str)
     
     # =================== [ AI 답변 확인 코드 ] ===================
-    print("\n" + "="*60)
-    print("🤖 AI의 원본 답변:", answer)
-    print("="*60 + "\n")
+    # print("\n" + "="*60)
+    # print("🤖 AI의 원본 답변:", answer)
+    # print("="*60 + "\n")
     # ==========================================================
 
 
     # AI 응답을 히스토리에 추가
     history.append({"role": "assistant", "content": answer})
+
+    return {"d":"dd"}
+    ####################################################
 
     # AI 응답 파싱 및 세션 데이터 업데이트
     response_data, summary, recommended_hobby = hobby_service.parse_ai_response(answer)
