@@ -15,6 +15,7 @@ from langchain.prompts import ChatPromptTemplate
 from langchain_upstage import ChatUpstage
 
 from dto.hobby import Hobby
+from db.hobby_query import get_hobby_by_name
 
 
 class Hobby_recommender:
@@ -181,8 +182,13 @@ class Hobby_recommender:
       hobby.set_additional_info(generation)
 
 
-    # 4. 추천 취미의 추가 정보 조회 => DB 연동 필요함
-
+    # 4. 추천 취미의 추가 정보 조회 
+    for hobby in recommended_hobbies:
+      hobby_info = get_hobby_by_name(hobby.name)
+      
+      hobby.set_desc(hobby_info[0])
+      hobby.set_detail(hobby_info[1])
+      hobby.set_equipments(hobby_info[2])
 
     
     # 임시 - retrieved_docs 네임스페이스 삭제
