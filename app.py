@@ -81,6 +81,7 @@ def generate_token():
 def chat_post(req: ChatRequestModel):
 
     # 세션 30분 넘은 값들 지우기 (기존 로직 유지)
+    chat_storage[req.token][1] = datetime.now()
     expire_delta = timedelta(minutes=30)
     keys_to_delete = []
     for token, data in chat_storage.items():
@@ -174,51 +175,53 @@ def chat_post(req: ChatRequestModel):
             "statusCode": 200,
             "data": {
                 "message": answer["message"],
-                "question_count": answer["question_count"]
+                "question_count": answer["question_count"],
+                "is_complete": answer["is_completed"]
             }
         }
 
-    if response_data:
-        # 사용자 데이터 업데이트
-        if "user_data" in response_data:
-            session_data[2].update(response_data["user_data"])
-        # 질문 카운트 업데이트
-        if "question_count" in response_data:
-            session_data[3] = response_data["question_count"]
-        # 완료 상태 업데이트
-        if "is_complete" in response_data:
-            session_data[4] = response_data["is_complete"]
-    else:
-        # 파싱 실패 시 예외 처리 (예: 사용자에게 재질문 유도)
-        response_data = {"is_complete": False, "message": "죄송해요, 답변을 이해하지 못했어요. 다시 한번 말씀해주시겠어요?"}
-        summary = ""
-        recommended_hobby = ""
+    # if response_data:
+    #     # 사용자 데이터 업데이트
+    #     if "user_data" in response_data:
+    #         session_data[2].update(response_data["user_data"])
+    #     # 질문 카운트 업데이트
+    #     if "question_count" in response_data:
+    #         session_data[3] = response_data["question_count"]
+    #     # 완료 상태 업데이트
+    #     if "is_complete" in response_data:
+    #         session_data[4] = response_data["is_complete"]
+    # else:
+    #     # 파싱 실패 시 예외 처리 (예: 사용자에게 재질문 유도)
+    #     response_data = {"is_complete": False, "message": "죄송해요, 답변을 이해하지 못했어요. 다시 한번 말씀해주시겠어요?"}
+    #     summary = ""
+    #     recommended_hobby = ""
     
-    # 타임스탬프 업데이트
-    session_data[1] = datetime.now()
+    # # 타임스탬프 업데이트
+    # session_data[1] = datetime.now()
 
     
 
 
     # 대화 종료 전
-    if response_data["is_complete"] is not None and not response_data["is_complete"]:
-        return {"statusCode": 200, "data": {
-            "response_data": response_data,
-            "message": response_data["message"],
-            "is_complete": response_data["is_complete"],
-            "summary": summary,
-            "recommended_hobby": recommended_hobby,
-        }}
+    # if ["is_complete"] is not None and not response_data["is_complete"]:
+    #     return {"statusCode": 200, "data": {
+    #         "response_data": response_data,
+    #         "message": response_data["message"],
+    #         "is_complete": response_data["is_complete"],
+    #         "summary": summary,
+    #         "recommended_hobby": recommended_hobby,
+    #     }}
     
     # 대화 종료
-    else:
-        recommend_req = HobbyRecommenderModel(
-            token=req.token,
-            user_desc=summary,
-            user_hobby="none"
-        )
-        result = recommend_post(recommend_req)
-        return {"statusCode": 200, "data": {"recommend_result": result}}
+    # else:
+    recommend_req = HobbyRecommenderModel(
+        token=req.token,
+        user_desc=answer["summary"],
+        user_hobby= answer["recommended_hobby"]
+    )
+    print("취미 추천 시작")
+    result = recommend_post(recommend_req)
+    return {"statusCode": 200, "data": {"recommend_result": result}}
 
 
     

@@ -59,7 +59,7 @@ class Hobby_recommender:
       hobby_desc = self.pinecone_vectorstore._index.fetch(
         ids=[hobby.eng_name], 
         namespace="hobby_descriptions"
-      )["vectors"][hobby.eng_name]["metadata"]["text"]
+      ).vectors[hobby.eng_name]["metadata"]["text"]
 
       second_result = self.pinecone_vectorstore.similarity_search(
         query=hobby_desc,
@@ -89,7 +89,7 @@ class Hobby_recommender:
       params["q"] = f"{hobby.eng_name} beginner tips"
 
       search = serpapi.search(params)
-      search_result = search.get_dict()
+      search_result = search.as_dict()
 
       # 검색 결과를 로드
       if "organic_results" not in search_result:
