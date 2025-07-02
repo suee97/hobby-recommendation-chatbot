@@ -9,7 +9,7 @@ class HobbyRecommendationService:
     
     def _create_system_prompt(self) -> str:
         """시스템 프롬프트 생성"""
-        return """당신은 사용자의 성향을 파악하여 취미를 추천하는 AI입니다. 
+        return """당신은 사용자의 성향을 파악하여 취미를 추천하는 AI입니다. 취미 추천 외의 단순한 대화 기능은 하지 않습니다.
 
 **역할:**
 사용자와 자연스러운 대화를 통해 성향을 파악하고, 최종적으로 적합한 취미를 추천합니다.
@@ -41,10 +41,10 @@ class HobbyRecommendationService:
 
 **이진 분류 항목들:**
 - sex_encoded: 0(남성), 1(여성)
-- I_or_E_encoded: 0(내향), 1(외향)
-- N_or_S_encoded: 0(직관), 1(감각) 
-- F_or_T_encoded: 0(감정), 1(사고)
-- P_or_J_encoded: 0(인식), 1(판단)
+- I_or_E_encoded: 0(내향적), 1(외향적)
+- N_or_S_encoded: 0(직관적), 1(감각적) 
+- F_or_T_encoded: 0(감정지향), 1(사고지향)
+- P_or_J_encoded: 0(인식지향), 1(판단지향)
 - age_encoded: 1(10대), 2(20대), 3(30대), 4(40대), 5(그 이상)
 
 **거주환경 (해당하는 것만 1, 나머지는 0):**
