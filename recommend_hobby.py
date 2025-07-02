@@ -113,10 +113,20 @@ class Hobby_recommender:
       )
 
       splits = text_splitter.split_documents(data)
+      print("chunk count : ", len(splits))
 
-      retrieved_vectorstore = PineconeVectorStore.from_documents(
-          splits, 
-          UpstageEmbeddings(model=self.embedding_model), 
+      batch_size = 100
+      for i in range(0, len(splits), batch_size):
+        batch = splits[i:i+batch_size]
+        PineconeVectorStore.from_documents(
+            batch, 
+            UpstageEmbeddings(model=self.embedding_model), 
+            index_name=self.index_name,
+            namespace="retrieved_docs"
+        )
+
+      retrieved_vectorstore = PineconeVectorStore(
+          embedding=UpstageEmbeddings(model=self.embedding_model),
           index_name=self.index_name,
           namespace="retrieved_docs"
       )
