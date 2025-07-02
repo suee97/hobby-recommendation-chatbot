@@ -113,12 +113,14 @@ class Hobby_recommender:
           } 
       )
 
-      docs = retriever.invoke(f"Tell me helpful information for {hobby.eng_name} beginners")
+      docs = retriever.invoke(
+          f"Tell me helpful information for {hobby.eng_name} beginners"
+        )
       docs = [doc.page_content for doc in docs]
 
       # Prompt
       system = """
-      Answer the question based on context. In Korean.
+      You must answer in Korean. Think of the user as a beginner who enjoys this hobby, and provide information that would be helpful to them. Share places where they can get help, websites, or related knowledge. Answer in a friendly tone and respond in Korean.
       """
       user = """
       Question: {question}
@@ -147,6 +149,14 @@ class Hobby_recommender:
 
     # 4. 추천 취미의 추가 정보 조회 => DB 연동 필요함
 
+
+    
+    # 임시 - retrieved_docs 네임스페이스 삭제
+    # try:
+    #     self.pinecone_index.delete(namespace="retrieved_docs")
+    #     print("retrieved_docs 네임스페이스가 성공적으로 삭제되었습니다.")
+    # except Exception as e:
+    #     print(f"네임스페이스 삭제 중 오류 발생: {e}")
 
     # 5. 최종 반환 데이터 정제 및 반환
     return recommended_hobbies
