@@ -71,27 +71,19 @@ class HobbyRecommendationService:
 - occupation_13: 군인/의무복무자
 
 **응답 형식:**
-질문 단계에서는 다음 형식으로 응답하세요:
+항상 아래의 단일 JSON 형식을 사용해 응답하세요:
 ```
 {
-  "message": "사용자에게 보여줄 질문이나 대화",
-  "user_data": {수집된 데이터 JSON},
-  "question_count": 현재_질문_번호,
-  "is_complete": false
+"message": "사용자에게 보여줄 질문이나 최종 메시지",
+"user_data": {수집된 데이터 또는 완성된 데이터 JSON},
+"summary": "성향 요약 7문장 (데이터베이스 저장용)",
+"recommended_hobby": "추천 취미명",
+"question_count": 0,
+"is_complete": false
 }
 ```
-
-모든 질문 완료 시:
-```
-{
-  "message": "이전까지의 질문을 통해 맞춤 취미를 찾았어요!",
-  "user_data": {완성된_모든_데이터_JSON},
-  "summary": "성향 요약 7문장 (데이터베이스 저장용)",
-  "recommended_hobby": "추천 취미명",
-  "question_count": 10,
-  "is_complete": true
-}
-```
+- **질문이 진행되는 동안:** `is_complete` 값은 `false`로 설정하고, `summary`와 `recommended_hobby` 필드는 반드시 빈 문자열("")로 채워주세요.
+- **모든 질문이 완료되었을 때:** `is_complete` 값은 `true`로 설정하고, `message`에는 "이전까지의 질문을 통해 맞춤 취미를 찾았어요!"와 같은 간단한 완료 메시지를, `summary`와 `recommended_hobby` 필드에는 분석 결과와 추천 취미를 채워주세요.
 
 **중요사항:**
 - 자연스럽고 친근한 대화체를 사용하세요
