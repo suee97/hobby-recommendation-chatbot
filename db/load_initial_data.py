@@ -1,11 +1,10 @@
-# 필요한 패키지 설치:
 # pip install pandas sqlalchemy pymysql cryptography
 
 import pandas as pd
 from sqlalchemy import create_engine, text
 import os
 
-# MySQL 연결 설정 (처음엔 DB명 없이 접속)
+# MySQL 연결 설정
 DB_USER = 'ssafy'      
 DB_PASSWORD = 'ssafy' 
 DB_HOST = 'localhost'
@@ -14,7 +13,7 @@ DB_NAME = 'ssafydb'
 
 engine = create_engine(f'mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/?charset=utf8mb4')
 
-# 1. 데이터베이스 및 테이블 생성 SQL
+# 데이터베이스 및 테이블 생성 
 init_sql = """
 CREATE DATABASE IF NOT EXISTS ssafydb;
 USE ssafydb;
@@ -100,30 +99,28 @@ CREATE TABLE IF NOT EXISTS hobbies (
 );
 """
 
-# 2. DB 생성 및 테이블 생성 실행
+# DB 생성 및 테이블 생성 
 with engine.connect() as conn:
     for stmt in init_sql.strip().split(';'):
         if stmt.strip():
             conn.execute(text(stmt))
 
-print("✅ DB 및 테이블 생성 완료")
-
-# 3. 이제 DB명을 포함하여 다시 연결 (테이블이 생성된 DB에 연결)
+# 테이블이 생성된 DB에 연결
 engine = create_engine(f'mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}?charset=utf8mb4')
 
-# 4. CSV 파일 경로 설정 (경로는 실제 환경에 맞게 조정)
+# CSV 파일 경로 설정
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, '..', 'db', 'data')
 
 user_csv_path = os.path.join(DATA_DIR, 'user_hobbies_data - user_hobbies_data.csv')
 hobby_csv_path = os.path.join(DATA_DIR, 'hobbies_data - hobbies_data.csv')
 
-# 5. CSV 불러오기
+# CSV 불러오기
 user_df = pd.read_csv(user_csv_path)
 hobby_df = pd.read_csv(hobby_csv_path)
 
-# 6. 데이터 삽입
+# 데이터 삽입
 hobby_df.to_sql(name='hobbies', con=engine, if_exists='append', index=False)
 user_df.to_sql(name='users', con=engine, if_exists='append', index=False)
 
-print("✅ 데이터 삽입 완료")
+print("데이터 삽입")
