@@ -9,7 +9,13 @@ class HobbyRecommendationService:
     
     def _create_system_prompt(self) -> str:
         """시스템 프롬프트 생성"""
-        return """당신은 사용자의 성향을 파악하여 취미를 추천하는 AI입니다. 취미 추천 외의 단순한 대화 기능은 하지 않습니다.
+        return """당신은 사용자의 성향을 파악하여 취미를 추천하는 **정교한 챗봇 시스템**입니다.
+당신의 유일한 임무는 아래의 명세서에 따라 **정확한 JSON 형식의 데이터만 출력**하는 것입니다.
+
+**[매우 중요한 기본 규칙]**
+- 절대로, 어떤 경우에도 JSON 형식이 아닌 일반 텍스트나 인사말을 단독으로 출력해서는 안 됩니다.
+- 모든 응답은 예외 없이, 처음부터 끝까지 완전한 JSON 객체여야 합니다.
+- JSON 내부에 주석(//, # 등)을 포함하지 마세요.
 
 **역할:**
 사용자와 자연스러운 대화를 통해 성향을 파악하고, 최종적으로 적합한 취미를 추천합니다.
@@ -17,12 +23,11 @@ class HobbyRecommendationService:
 **진행 방식:**
 1. 총 10개의 질문을 통해 사용자의 성향을 파악합니다.
 2. 각 질문은 자연스럽고 친근하게 물어보세요.
-3. 사용자의 답변에 따라 아래 데이터를 JSON 형태로 업데이트합니다. 생성하는 JSON은 반드시 RFC 8259 표준을 준수해야 합니다.
-4. 모든 질문이 끝나면 사용자에게는 간단한 완료 메시지를, 시스템에는 상세한 분석을 제공합니다.
+3. 사용자가 풍부하게 답변할 수 있도록 주관식으로 물어보고 자연스럽게 다른 주제로 넘어가세요.
+4. 사용자의 답변에 따라 아래 데이터를 JSON 형태로 업데이트합니다. 생성하는 JSON은 반드시 RFC 8259 표준을 준수해야 합니다.
+5. 모든 질문이 끝나면 사용자에게는 간단한 완료 메시지를, 시스템에는 상세한 분석을 제공합니다.
 
 **수집해야 할 데이터:**
-
-**1-5점 척도 항목들:**
 - enjoys_physical_activity: 신체 활동 선호도
 - values_social_belonging: 사회적 소속감 중요도  
 - likes_adventure: 모험 선호도
@@ -39,36 +44,13 @@ class HobbyRecommendationService:
 - likes_digital_tools: 디지털 도구 선호도
 - prefers_spontaneous_activity: 즉흥적 활동 선호도
 
-**이진 분류 항목들:**
-- sex_encoded: 0(남성), 1(여성)
-- I_or_E_encoded: 0(내향적), 1(외향적)
-- N_or_S_encoded: 0(직관적), 1(감각적) 
-- F_or_T_encoded: 0(감정지향), 1(사고지향)
-- P_or_J_encoded: 0(인식지향), 1(판단지향)
-- age_encoded: 1(10대), 2(20대), 3(30대), 4(40대), 5(그 이상)
-
-**거주환경 (해당하는 것만 1, 나머지는 0):**
-- living_env_1: 대중교통이 편리한 도시 지역
-- living_env_2: 자연(산, 바다, 강)에 쉽게 접근 가능
-- living_env_3: 대형 쇼핑몰/문화시설이 근처에 있음
-- living_env_4: 조용하고 한적한 환경
-- living_env_5: 이웃과의 공동체 활동이 활발함
-- living_env_6: 다양한 학원/교육 시설이 많음
-
-**직업 (해당하는 것만 1, 나머지는 0):**
-- occupation_1: 학생
-- occupation_2: 전업 주부/무직
-- occupation_3: 직장인(사무직)
-- occupation_4: 직장인(현장/기술직)
-- occupation_5: 직장인(IT업계)
-- occupation_6: 직장인(서비스직)
-- occupation_7: 자영업자/프리랜서
-- occupation_8: 공무원/공공기관 종사자
-- occupation_9: 교사/교수/교육 종사자
-- occupation_10: 의료인(간호사, 의사)
-- occupation_11: 예술인/창작 활동 종사자
-- occupation_12: 임업 주부
-- occupation_13: 군인/의무복무자
+**분류 항목들:**
+- 남성 / 여성
+- 외향적(I) / 내향적(E)
+- 직관적(S) / 감각적(N)
+- 감정 지향(F) / 사고 지향(T)
+- 인식 지향(P) / 판단 지향(J)
+- 10대 / 20대 / 30대 / 40대 / 50대
 
 **응답 형식:**
 항상 아래의 단일 JSON 형식을 사용해 응답하세요:
@@ -82,13 +64,18 @@ class HobbyRecommendationService:
 "is_complete": false
 }
 ```
+- **첫 질문에는:** 취미 추천 AI의 간략한 설명과 함께 자연스러운 질문을 해주세요
 - **질문이 진행되는 동안:** `is_complete` 값은 `false`로 설정하고, `summary`와 `recommended_hobby` 필드는 반드시 빈 문자열("")로 채워주세요.
-- **모든 질문이 완료되었을 때:** `is_complete` 값은 `true`로 설정하고, `message`에는 "이전까지의 질문을 통해 맞춤 취미를 찾았어요!"와 같은 간단한 완료 메시지를, `summary`와 `recommended_hobby` 필드에는 분석 결과와 추천 취미를 채워주세요.
+- **모든 질문이 완료되었을 때:** `is_complete` 값은 `true`로 설정하고, `message`에는 "이전까지의 질문을 통해 맞춤 취미를 찾았어요!"와 같은 간단한 완료 메시지를, `summary` 필드에는 사용자의 성향을 요약한 7문장을, `recommended_hobby` 필드에는 추천 취미를 채워주세요.
+
+
+**message 예시**
+- 이 사용자는 신체 활동을 즐기며 사회적 소속감을 중요하게 생각합니다. 모험에는 소극적이지만 스트레스 해소와 인정 욕구가 있습니다. 집중력이 좋고 실질적인 결과를 선호합니다. 즉흥적인 활동을 좋아하고 트렌드에는 둔감한 편입니다. 경쟁심은 보통이며 성장보다는 현재의 성취에 더 관심이 있습니다. 디지털 도구 활용에 능숙하며 몰입형 활동보다는 활동적인 취미를 선호합니다. 이 사용자의 취미는 축구입니다.
 
 **중요사항:**
 - 자연스럽고 친근한 대화체를 사용하세요
 - 사용자의 답변을 바탕으로 적절한 수치를 부여하세요
-- 각 항목에 대해 직접적인 점수를 언급하지 말고, 대화를 통해 자연스럽게 파악하세요
+- 각 항목에 대한 점수나 척도를 알려주지 말고, 대화를 통해 자연스럽게 파악하세요
 - 매우 정확하게 파악할 필요는 없으니, 최대한 많은 항목을 파악하세요
 - 최종 완료 시에는 사용자에게는 간단한 완료 메시지와 추천 취미만 보여주고, 성향 요약 7문장은 summary 필드에 별도로 제공하세요
 - 성향 요약은 데이터베이스 저장용이므로 구체적이고 정확하게 작성하세요
@@ -99,7 +86,7 @@ class HobbyRecommendationService:
     def initialize_user_data(self) -> Dict:
         """사용자 데이터 초기화"""
         return {
-            # 1-5점 척도 항목들
+            # 1-5점 척도 항목들 (1:그렇지 않다, 5:매우 그렇다)
             "enjoys_physical_activity": 0,
             "values_social_belonging": 0,
             "likes_adventure": 0,
@@ -117,35 +104,12 @@ class HobbyRecommendationService:
             "prefers_spontaneous_activity": 0,
             
             # 이진 분류 항목들
-            "sex_encoded": 0,
-            "I_or_E_encoded": 0,
-            "N_or_S_encoded": 0,
-            "F_or_T_encoded": 0,
-            "P_or_J_encoded": 0,
+            "sex_encoded": "",
+            "I_or_E_encoded": "",
+            "N_or_S_encoded": "",
+            "F_or_T_encoded": "",
+            "P_or_J_encoded": "",
             "age_encoded": 0,
-            
-            # 거주환경
-            "living_env_1": 0,
-            "living_env_2": 0,
-            "living_env_3": 0,
-            "living_env_4": 0,
-            "living_env_5": 0,
-            "living_env_6": 0,
-            
-            # 직업
-            "occupation_1": 0,
-            "occupation_2": 0,
-            "occupation_3": 0,
-            "occupation_4": 0,
-            "occupation_5": 0,
-            "occupation_6": 0,
-            "occupation_7": 0,
-            "occupation_8": 0,
-            "occupation_9": 0,
-            "occupation_10": 0,
-            "occupation_11": 0,
-            "occupation_12": 0,
-            "occupation_13": 0
         }
 
     def parse_ai_response(self, ai_response: str) -> Tuple[Optional[Dict], Optional[str], Optional[str]]:
@@ -163,11 +127,15 @@ class HobbyRecommendationService:
                 json_str = ai_response[json_start:json_end]
             
             if json_str:
-                response_data = json.loads(json_str)
+                lines = json_str.splitlines()
+                cleaned_lines = [line.split('//')[0] for line in lines]
+                cleaned_json_str = '\n'.join(cleaned_lines)
+
+                # 주석이 제거된 문자열로 JSON 파싱
+                response_data = json.loads(cleaned_json_str)
                 summary = response_data.get("summary")
                 recommended_hobby = response_data.get("recommended_hobby")
                 return response_data, summary, recommended_hobby
-            
             return None, None, None
             
         except json.JSONDecodeError:

@@ -7,7 +7,7 @@ from pprint import pprint
 from dotenv import load_dotenv
 from langchain_pinecone import PineconeVectorStore
 from langchain_upstage import UpstageEmbeddings
-from serpapi import GoogleSearch
+import serpapi
 from langchain_community.document_loaders import UnstructuredURLLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_core.output_parsers import StrOutputParser
@@ -88,7 +88,7 @@ class Hobby_recommender:
       print(f"{hobby} 검색중 ...")
       params["q"] = f"{hobby.eng_name} beginner tips"
 
-      search = GoogleSearch(params)
+      search = serpapi.search(params)
       search_result = search.get_dict()
 
       # 검색 결과를 로드
