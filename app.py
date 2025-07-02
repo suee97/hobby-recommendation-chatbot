@@ -23,12 +23,12 @@ app = FastAPI()
 
 # API KEY 불러오기
 load_dotenv()
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+SOLAR_LLM_API_KEY = os.getenv('SOLAR_LLM_API_KEY')
 
 # Solar LLM
 client = OpenAI(
-    api_key=OPENAI_API_KEY,
-    # base_url="https://api.upstage.ai/v1"
+    api_key=SOLAR_LLM_API_KEY,
+    base_url="https://api.upstage.ai/v1"
 )
 
 # 취미 추천 서비스 초기화
@@ -96,29 +96,47 @@ def chat_post(req: ChatRequestModel):
     history.append(newChat)
 
     # Solar LLM에 요청 보내고 응답 받기
-    response = client.chat.completions.create(
-        model = "gpt-4o-mini",
+    stream = client.chat.completions.create(
+        model = "solar-mini",
         messages = history,
-        functions=llm_functions,
-        function_call={"name": "recommend_hobby"}
+        stream = True,
     )
+    answer = ''
+    for chunk in stream:
+        if chunk.choices[0].delta.content is not None:
+            answer += chunk.choices[0].delta.content
 
-    arguments_str = response.choices[0].message.function_call.arguments
-    result = json.loads(arguments_str)
+    # arguments_str = response.choices[0].message.function_call.arguments
+    # result = json.loads(arguments_str)
     
+    # =================== [ AI 답변 확인 코드 ] ===================
+    print("\n" + "="*60)
+    print("🤖 AI의 원본 답변:", answer)
+    print("="*60 + "\n")
+    # ==========================================================
+
+
     # AI 응답을 히스토리에 추가
-    history.append({"role": "assistant", "content": arguments_str})
+    history.append({"role": "assistant", "content": answer})
+
+    # AI 응답 파싱 및 세션 데이터 업데이트
+    response_data, summary, recommended_hobby = hobby_service.parse_ai_response(answer)
     
-    if result:
+    if response_data:
         # 사용자 데이터 업데이트
-        if "user_data" in result:
-            session_data[2].update(result["user_data"])
+        if "user_data" in response_data:
+            session_data[2].update(response_data["user_data"])
         # 질문 카운트 업데이트
-        if "question_count" in result:
-            session_data[3] = result["question_count"]
+        if "question_count" in response_data:
+            session_data[3] = response_data["question_count"]
         # 완료 상태 업데이트
-        if "is_complete" in result:
-            session_data[4] = result["is_complete"]
+        if "is_complete" in response_data:
+            session_data[4] = response_data["is_complete"]
+    else:
+        # 파싱 실패 시 예외 처리 (예: 사용자에게 재질문 유도)
+        response_data = {"is_complete": False, "message": "죄송해요, 답변을 이해하지 못했어요. 다시 한번 말씀해주시겠어요?"}
+        summary = ""
+        recommended_hobby = ""
     
     # 타임스탬프 업데이트
     session_data[1] = datetime.now()
@@ -134,19 +152,20 @@ def chat_post(req: ChatRequestModel):
 
 
     # 대화 종료 전
-    if not result["is_complete"]:
+    if response_data["is_complete"] is not None and not response_data["is_complete"]:
         return {"statusCode": 200, "data": {
-            "message": result["message"],
-            "is_complete": result["is_complete"],
-            "summary": result.get("summary"),  # 있을 때만 반환
-            "recommended_hobby": result.get("recommended_hobby"),  # 있을 때만 반환
+            "response_data": response_data,
+            "message": response_data["message"],
+            "is_complete": response_data["is_complete"],
+            "summary": summary,
+            "recommended_hobby": recommended_hobby,
         }}
     
     # 대화 종료
     else:
         recommend_req = HobbyRecommenderModel(
             token=req.token,
-            user_desc=result.get("summary"),
+            user_desc=summary,
             user_hobby="none"
         )
         result = recommend_post(recommend_req)
