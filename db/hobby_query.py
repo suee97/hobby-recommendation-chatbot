@@ -13,7 +13,7 @@ engine = create_engine(
 def get_hobby_by_name(name: str):
     with engine.connect() as conn:
         query = text("""
-            SELECT description, DetailedDescription, Equipment
+            SELECT image_url, description, DetailedDescription, Equipment
             FROM hobbies
             WHERE name = :name
         """)
@@ -25,6 +25,7 @@ if __name__ == "__main__":
     hobby_name = "등산"  
     res = get_hobby_by_name(hobby_name)
     if res:
+        print(f"image_url: {res.image_url}")
         print(f"Description: {res.description}")
         print(f"DetailedDescription: {res.DetailedDescription}")
         print(f"Equipment: {res.Equipment}")

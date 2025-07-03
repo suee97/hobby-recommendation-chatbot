@@ -119,8 +119,12 @@ hobby_csv_path = os.path.join(DATA_DIR, 'hobbies_data - hobbies_data.csv')
 user_df = pd.read_csv(user_csv_path)
 hobby_df = pd.read_csv(hobby_csv_path)
 
-# 데이터 삽입
+# 'name' 컬럼을 기반으로 'image_url' 컬럼을 동적으로 생성합니다.
+# CSV 파일에 image_url 컬럼이 있어도 이 코드가 새로운 값으로 덮어씁니다.
+hobby_df['image_url'] = hobby_df['name'].apply(lambda hobby_name: f'static/images/hobbies/{hobby_name}.png')
+
+# 수정된 DataFrame을 사용하여 데이터 삽입
 hobby_df.to_sql(name='hobbies', con=engine, if_exists='append', index=False)
 user_df.to_sql(name='users', con=engine, if_exists='append', index=False)
 
-print("데이터 삽입")
+print("데이터 삽입 완료.")
