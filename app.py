@@ -22,7 +22,7 @@ from util.llm_tools import llm_functions
 
 app = FastAPI() 
 
-# app.mount("/static", StaticFiles(directory="/static"), name="static")
+app.mount("/static", StaticFiles(directory="./static"), name="static")
 
 @app.on_event("startup")
 async def startup_event():
