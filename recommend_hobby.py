@@ -89,20 +89,11 @@ class Hobby_recommender:
       # 필터 대상으로 추가
       hobby_filter.append(new_hobby.name)
 
-
-
     # 1, 2차 취미 추천 리스트 병합
     recommended_hobbies = first_recommended_hobbies + second_recommended_hobbies
     print("추천 취미 리스트 : ", [hobby.name for hobby in recommended_hobbies])
 
     for hobby in recommended_hobbies:
-      # hobby_info = get_hobby_by_name(hobby.name)
-      # hobby.set_image(hobby_info[0])
-      # hobby.set_desc(hobby_info[1])
-      # hobby.set_detail(hobby_info[2])
-      # hobby.set_equipments(hobby_info[3])
-      # additional_info = self.search_additional_info(hobby.name)
-      # hobby.set_additional_info(additional_info)
       hobby.set_image(get_hobby_by_name(hobby.name)[0])
 
     return recommended_hobbies
@@ -121,53 +112,6 @@ class Hobby_recommender:
     hobby.set_detail(hobby_info[2])
     hobby.set_equipments(hobby_info[3])
 
-    # 추천 취미에 도움될 만한 정보 조회(RAG)
-    # params = {
-    #   "engine": "google",
-    #   "num": "10",
-    #   "api_key": self.serp_api_key
-    # }
-    
-    # print("="*30)
-    # print(f"{hobby} 검색중 ...")
-    # params["q"] = f"{hobby.eng_name} beginner tips"
-
-    # search = serpapi.search(params)
-    # search_result = search.as_dict()
-
-    # 1. organic_results 우선
-    # urls = []
-    # if "organic_results" in search_result and search_result["organic_results"]:
-    #     urls = [result["link"] for result in search_result["organic_results"]]
-
-    # 3. 그래도 없으면 안내 메시지
-    # if not urls:
-    #     print("검색 결과에 사용할 수 있는 링크가 없습니다:", search_result)
-    #     # 예외를 발생시키지 않고, 안내 메시지나 빈 결과로 처리
-    #     hobby.set_additional_info("검색 결과가 충분하지 않습니다. 구글/유튜브/포럼 등에서 직접 정보를 찾아보세요.")
-    #     return hobby
-    
-    # loader = UnstructuredURLLoader(urls=urls[:2])
-    # data = loader.load()
-
-    # text split
-    # text_splitter = RecursiveCharacterTextSplitter(
-    #     chunk_size=200,
-    #     chunk_overlap=50
-    # )
-
-    # splits = text_splitter.split_documents(data)
-    # print("chunk count : ", len(splits))
-
-    # batch_size = 100
-    # for i in range(0, len(splits), batch_size):
-    #   batch = splits[i:i+batch_size]
-    #   PineconeVectorStore.from_documents(
-    #       batch, 
-    #       UpstageEmbeddings(model=self.embedding_model), 
-    #       index_name=self.index_name,
-    #       namespace="retrieved_docs"
-    #   )
     retrieved_vectorstore = PineconeVectorStore(
         embedding=UpstageEmbeddings(model=self.embedding_model),
         index_name=self.index_name,

@@ -90,6 +90,7 @@ def generate_token():
         chat_storage[token] = session_data
     return {"statusCode": 200, "data": {"token": token}}
 
+
 @app.post("/chat")
 def chat_post(req: ChatRequestModel):
 
@@ -164,21 +165,6 @@ def chat_post(req: ChatRequestModel):
     answer = json.loads(response.choices[0].message.content)
     print(answer)
 
-    # answer = ''
-    # for chunk in stream:
-    #     if chunk.choices[0].delta.content is not None:
-    #         answer += chunk.choices[0].delta.content
-    # print(answer)
-    # arguments_str = response.choices[0].message.function_call.arguments
-    # result = json.loads(arguments_str)
-    
-    # =================== [ AI 답변 확인 코드 ] ===================
-    # print("\n" + "="*60)
-    # print("🤖 AI의 원본 답변:", answer)
-    # print("="*60 + "\n")
-    # ==========================================================
-
-
     # AI 응답을 히스토리에 추가
     history.append({"role": "assistant", "content": answerStr})
 
@@ -192,41 +178,7 @@ def chat_post(req: ChatRequestModel):
                 "is_complete": answer["is_completed"]
             }
         }
-
-    # if response_data:
-    #     # 사용자 데이터 업데이트
-    #     if "user_data" in response_data:
-    #         session_data[2].update(response_data["user_data"])
-    #     # 질문 카운트 업데이트
-    #     if "question_count" in response_data:
-    #         session_data[3] = response_data["question_count"]
-    #     # 완료 상태 업데이트
-    #     if "is_complete" in response_data:
-    #         session_data[4] = response_data["is_complete"]
-    # else:
-    #     # 파싱 실패 시 예외 처리 (예: 사용자에게 재질문 유도)
-    #     response_data = {"is_complete": False, "message": "죄송해요, 답변을 이해하지 못했어요. 다시 한번 말씀해주시겠어요?"}
-    #     summary = ""
-    #     recommended_hobby = ""
     
-    # # 타임스탬프 업데이트
-    # session_data[1] = datetime.now()
-
-    
-
-
-    # 대화 종료 전
-    # if ["is_complete"] is not None and not response_data["is_complete"]:
-    #     return {"statusCode": 200, "data": {
-    #         "response_data": response_data,
-    #         "message": response_data["message"],
-    #         "is_complete": response_data["is_complete"],
-    #         "summary": summary,
-    #         "recommended_hobby": recommended_hobby,
-    #     }}
-    
-    # 대화 종료
-    # else:
     recommend_req = HobbyRecommenderModel(
         token=req.token,
         user_desc=answer["summary"],
@@ -238,34 +190,12 @@ def chat_post(req: ChatRequestModel):
     end = time.perf_counter()
     print(f"-- 취미 추천 실행 시간: {end - start:.4f}초")
     return {"statusCode": 200, "data": {"recommend_result": result}}
-
-
     
 
 @app.post("/recommend-hobby")
 def recommend_post(req: HobbyRecommenderModel):
-    # 토큰 존재하는지 확인, 없으면 에러
-    # if req.token not in chat_storage:
-    #     return {"statusCode": 400, "errorMessage": "서버에 존재하지 않는 토큰입니다."}
     result = hobby_recommender.recommend(req.user_desc, req.user_hobby)
-
-
     return result
-    # 응답 데이터 구성
-    response = {
-        "answer": answer,
-        "user_data": session_data[2],
-        "question_count": session_data[3],
-        "is_profiling_done": session_data[4]
-    }
-    
-    # 완료된 경우 추가 정보 포함
-    if summary:
-        response["summary"] = summary
-    if recommended_hobby:
-        response["recommended_hobby"] = recommended_hobby
-
-    return {"statusCode": 200, "data": response}
 
 
 @app.get("/recommend-hobby/{hobby}")
@@ -299,6 +229,7 @@ def get_user_data(token: str):
         "question_count": session_data[3],
         "is_profiling_done": session_data[4]
     }}
+
 
 # 추가 API: 검색 데이터 업데이트
 @app.get("/db/update")
