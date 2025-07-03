@@ -4,11 +4,15 @@ class Hobby:
   def __init__(self, name, eng_name):
     self.name = name
     self.eng_name = eng_name
+    self.image_url = None
     self.desc = None
     self.detail = None
     self.equipments = None
     self.additional_info = None
 
+  def set_image(self, image_url):
+    self.image_url = image_url
+  
   def set_desc(self, desc):
     self.desc = desc
 

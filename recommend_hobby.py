@@ -94,9 +94,11 @@ class Hobby_recommender:
 
     # 추천 취미의 추가 정보 조회 
     hobby_info = get_hobby_by_name(hobby.name)
-    hobby.set_desc(hobby_info[0])
-    hobby.set_detail(hobby_info[1])
-    hobby.set_equipments(hobby_info[2])
+
+    hobby.set_image(hobby_info[0])
+    hobby.set_desc(hobby_info[1])
+    hobby.set_detail(hobby_info[2])
+    hobby.set_equipments(hobby_info[3])
 
     # 추천 취미에 도움될 만한 정보 조회(RAG)
     params = {
