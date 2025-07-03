@@ -18,6 +18,7 @@ engine = create_engine(f'mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_P
 
 # 데이터베이스 및 테이블 생성 
 init_sql = f"""
+DROP DATABASE IF EXISTS {DB_NAME};
 CREATE DATABASE IF NOT EXISTS {DB_NAME};
 USE {DB_NAME};
 
@@ -125,7 +126,7 @@ hobby_df = pd.read_csv(hobby_csv_path)
 
 # 'name' 컬럼을 기반으로 'image_url' 컬럼을 동적으로 생성합니다.
 # CSV 파일에 image_url 컬럼이 있어도 이 코드가 새로운 값으로 덮어씁니다.
-hobby_df['image_url'] = hobby_df['name'].apply(lambda hobby_name: f'static/images/hobbies/{hobby_name}.png')
+hobby_df['image_url'] = hobby_df['eng_name'].apply(lambda hobby_name: f'static/images/hobbies/{hobby_name}.png')
 
 # 수정된 DataFrame을 사용하여 데이터 삽입
 hobby_df.to_sql(name='hobbies', con=engine, if_exists='append', index=False)

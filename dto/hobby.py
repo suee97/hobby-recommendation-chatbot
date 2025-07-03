@@ -10,6 +10,9 @@ class Hobby:
     self.equipments = None
     self.additional_info = None
 
+  def set_eng_name(self, eng_name):
+    self.eng_name=eng_name
+
   def set_image(self, image_url):
     self.image_url = image_url
   

@@ -112,6 +112,7 @@ class Hobby_recommender:
     hobby.set_desc(hobby_info[1])
     hobby.set_detail(hobby_info[2])
     hobby.set_equipments(hobby_info[3])
+    hobby.set_eng_name(hobby_info[4])
 
     # 추천 취미에 도움될 만한 정보 조회(RAG)
     params = {
@@ -235,7 +236,7 @@ class Hobby_recommender:
   # 모든 취미를 가져와서 vector db에 넣는 함수
   def update_newly_data(self):
     hobbiesTuple = get_all_hobby_names()
-    hobbies = [item[0] for item in hobbiesTuple]
+    hobbies = [item[1] for item in hobbiesTuple]  # item[1] : 영어 이름
 
     for hobby in hobbies:
       params = {
@@ -245,6 +246,7 @@ class Hobby_recommender:
       }
       print(f"{hobby} 검색중 ... ")
       params["q"] = f"{hobby} beginner tips"
+      print("검색어 : ", params["q"])
 
       search = serpapi.search(params)
       search_result = search.as_dict()
@@ -279,3 +281,8 @@ class Hobby_recommender:
       stats = self.pinecone_vectorstore._index.describe_index_stats()
       print("update 이후: ")
       print(stats)
+
+
+# test
+# hobby_recommender = Hobby_recommender(os.getenv("SERPAPI_API_KEY"))
+# hobby_recommender.update_newly_data()
