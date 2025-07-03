@@ -84,6 +84,9 @@ class Hobby_recommender:
     recommended_hobbies = first_recommended_hobbies + second_recommended_hobbies
     print("추천 취미 리스트 : ", [hobby.name for hobby in recommended_hobbies])
 
+    for hobby in recommended_hobbies:
+      hobby.set_image(get_hobby_by_name(hobby.name)[0])
+
     return recommended_hobbies
 
 
