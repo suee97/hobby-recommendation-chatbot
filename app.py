@@ -21,6 +21,11 @@ from util.llm_tools import llm_functions
 
 app = FastAPI() 
 
+@app.on_event("startup")
+async def startup_event():
+    global hobby_recommender
+    hobby_recommender = Hobby_recommender(os.getenv("SERPAPI_API_KEY"))
+
 @app.get("/")
 def root():
     return {"message": "FastAPI 서버 정상적으로 실행 중"}
@@ -235,8 +240,6 @@ def recommend_post(req: HobbyRecommenderModel):
     # 토큰 존재하는지 확인, 없으면 에러
     # if req.token not in chat_storage:
     #     return {"statusCode": 400, "errorMessage": "서버에 존재하지 않는 토큰입니다."}
-
-    hobby_recommender = Hobby_recommender(os.getenv("SERPAPI_API_KEY"))
     result = hobby_recommender.recommend(req.user_desc, req.user_hobby)
 
 
@@ -256,6 +259,13 @@ def recommend_post(req: HobbyRecommenderModel):
         response["recommended_hobby"] = recommended_hobby
 
     return {"statusCode": 200, "data": response}
+
+
+@app.get("/recommend-hobby/{hobby}")
+def get_hobby_additional_info(hobby: str):
+    result = hobby_recommender.search_additional_info(hobby)
+    return result
+
 
 # 추가 API: 사용자 데이터 조회
 @app.get("/user-data/{token}")
