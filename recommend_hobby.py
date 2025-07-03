@@ -96,23 +96,19 @@ class Hobby_recommender:
     print("추천 취미 리스트 : ", [hobby.name for hobby in recommended_hobbies])
 
     for hobby in recommended_hobbies:
+      # hobby_info = get_hobby_by_name(hobby.name)
+      # hobby.set_image(hobby_info[0])
+      # hobby.set_desc(hobby_info[1])
+      # hobby.set_detail(hobby_info[2])
+      # hobby.set_equipments(hobby_info[3])
+      # additional_info = self.search_additional_info(hobby.name)
+      # hobby.set_additional_info(additional_info)
       hobby.set_image(get_hobby_by_name(hobby.name)[0])
 
     return recommended_hobbies
 
 
   def search_additional_info(self, hobby_name):
-
-    # hobby 객체 생성
-    hobby = Hobby(hobby_name, None)
-
-    # 추천 취미의 추가 정보 조회 
-    hobby_info = get_hobby_by_name(hobby.name)
-
-    hobby.set_image(hobby_info[0])
-    hobby.set_desc(hobby_info[1])
-    hobby.set_detail(hobby_info[2])
-    hobby.set_equipments(hobby_info[3])
 
     # 추천 취미에 도움될 만한 정보 조회(RAG)
     # params = {
@@ -161,7 +157,6 @@ class Hobby_recommender:
     #       index_name=self.index_name,
     #       namespace="retrieved_docs"
     #   )
-
     retrieved_vectorstore = PineconeVectorStore(
         embedding=UpstageEmbeddings(model=self.embedding_model),
         index_name=self.index_name,
@@ -214,12 +209,10 @@ class Hobby_recommender:
     rag_chain = prompt | llm | StrOutputParser()
 
     # Generate
-    generation = rag_chain.invoke({"context": "\n\n".join(docs), "question": f"{hobby.name}을/를 처음 하는 사람에게 도움될만한 정보를 알려줘"})
+    generation = rag_chain.invoke({"context": "\n\n".join(docs), "question": f"{hobby_name}을/를 처음 하는 사람에게 도움될만한 정보를 알려줘"})
     generation = generation.split(":")[1].strip() if ":" in generation else generation.strip()
-    hobby.set_additional_info(generation)
+    return generation
 
-    # 5. 최종 반환 데이터 정제 및 반환
-    return hobby
   
   # vector db clear 함수
   def clear_db(self):
@@ -278,6 +271,6 @@ class Hobby_recommender:
             index_name=self.index_name,
             namespace="retrieved_docs"
         )
-      stats = self.pinecone_vectorstore._index.describe_index_stats()
-      print("update 이후: ")
-      print(stats)
+    stats = self.pinecone_vectorstore._index.describe_index_stats()
+    print("update 이후: ")
+    print(stats)

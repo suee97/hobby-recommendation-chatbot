@@ -5,19 +5,20 @@
 # 가상환경 설정이 필요하다면 notion의 python 가상환경 설정을 참고해주세요.
 # 추가: .env 파일에 SOLAR_LLM_API_KEY = '받은 API KEY' 추가해주세요.
 
+import os, random, string, json, time
 from fastapi import FastAPI
-import json
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from openai import OpenAI
 from pydantic import BaseModel
-import os, random, string
 from datetime import datetime, timedelta
 from recommend_hobby import Hobby_recommender
 
 # 새로 추가된 모듈 import
 from hobby_service import HobbyRecommendationService
 from util.llm_tools import llm_functions
+from recommend_hobby import get_hobby_by_name
+from dto.hobby import Hobby
 
 app = FastAPI() 
 
@@ -228,8 +229,11 @@ def chat_post(req: ChatRequestModel):
         user_desc=answer["summary"],
         user_hobby= answer["recommended_hobby"]
     )
-    print("취미 추천 시작")
+    print(f"-- 성향 파악 완료, 취미 추천 시작 (취미 썸네일만 해당)")
+    start = time.perf_counter()
     result = recommend_post(recommend_req)
+    end = time.perf_counter()
+    print(f"-- 취미 추천 실행 시간: {end - start:.4f}초")
     return {"statusCode": 200, "data": {"recommend_result": result}}
 
 
@@ -263,8 +267,19 @@ def recommend_post(req: HobbyRecommenderModel):
 
 @app.get("/recommend-hobby/{hobby}")
 def get_hobby_additional_info(hobby: str):
-    result = hobby_recommender.search_additional_info(hobby)
-    return result
+    print(f"-- {hobby} 정보 조회 및 RAG 시작")
+    start = time.perf_counter()
+    hobbyDto = Hobby(hobby, None)
+    hobby_info = get_hobby_by_name(hobby)
+    hobbyDto.set_image(hobby_info[0])
+    hobbyDto.set_desc(hobby_info[1])
+    hobbyDto.set_detail(hobby_info[2])
+    hobbyDto.set_equipments(hobby_info[3])
+    additional_info = hobby_recommender.search_additional_info(hobby)
+    hobbyDto.set_additional_info(additional_info)
+    end = time.perf_counter()
+    print(f"-- {hobby} 정보 조회 및 RAG 끝: {end - start:.4f}초")
+    return hobbyDto
 
 
 # 추가 API: 사용자 데이터 조회
