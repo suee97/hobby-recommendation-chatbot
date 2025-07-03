@@ -5,8 +5,9 @@
 # 가상환경 설정이 필요하다면 notion의 python 가상환경 설정을 참고해주세요.
 # 추가: .env 파일에 SOLAR_LLM_API_KEY = '받은 API KEY' 추가해주세요.
 
-import os, random, string, json, time
+import os, random, string, json, time, json
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -21,6 +22,8 @@ from recommend_hobby import get_hobby_by_name
 from dto.hobby import Hobby
 
 app = FastAPI() 
+
+app.mount("/static", StaticFiles(directory="./static"), name="static")
 
 @app.on_event("startup")
 async def startup_event():
