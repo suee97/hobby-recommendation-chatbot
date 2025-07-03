@@ -3,20 +3,23 @@
 import pandas as pd
 from sqlalchemy import create_engine, text
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # MySQL 연결 설정
-DB_USER = 'ssafy'      
-DB_PASSWORD = 'ssafy' 
-DB_HOST = 'localhost'
-DB_PORT = '3306'
-DB_NAME = 'ssafydb'   
+DB_USER = os.getenv('DB_USER')
+DB_PASSWORD = os.getenv('DB_PASSWORD') 
+DB_HOST = os.getenv('DB_HOST')
+DB_PORT = os.getenv('DB_PORT')
+DB_NAME = os.getenv('DB_NAME')   
 
 engine = create_engine(f'mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/?charset=utf8mb4')
 
 # 데이터베이스 및 테이블 생성 
-init_sql = """
-CREATE DATABASE IF NOT EXISTS ssafydb;
-USE ssafydb;
+init_sql = f"""
+CREATE DATABASE IF NOT EXISTS {DB_NAME};
+USE {DB_NAME};
 
 CREATE TABLE IF NOT EXISTS users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,

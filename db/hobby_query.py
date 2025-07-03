@@ -1,10 +1,15 @@
 from sqlalchemy import create_engine, text
+from dotenv import load_dotenv
+import os
 
-DB_USER = 'ssafy'
-DB_PASSWORD = 'ssafy'
-DB_HOST = 'localhost'
-DB_PORT = '3306'
-DB_NAME = 'ssafydb'
+load_dotenv()
+
+# MySQL 연결 설정
+DB_USER = os.getenv('DB_USER')
+DB_PASSWORD = os.getenv('DB_PASSWORD') 
+DB_HOST = os.getenv('DB_HOST')
+DB_PORT = os.getenv('DB_PORT')
+DB_NAME = os.getenv('DB_NAME') 
 
 engine = create_engine(
     f'mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}?charset=utf8mb4'
