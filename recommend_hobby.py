@@ -2,7 +2,8 @@
 # 가상환경 설정이 필요하다면 notion의 python 가상환경 설정을 참고해주세요.
 # 추가: .env 파일에 SOLAR_LLM_API_KEY = '받은 API KEY' 추가해주세요.
 
-import os
+import os, time
+from tqdm import tqdm
 from pprint import pprint
 from dotenv import load_dotenv
 from langchain_pinecone import PineconeVectorStore
@@ -114,52 +115,52 @@ class Hobby_recommender:
     hobby.set_equipments(hobby_info[3])
 
     # 추천 취미에 도움될 만한 정보 조회(RAG)
-    params = {
-      "engine": "google",
-      "num": "10",
-      "api_key": self.serp_api_key
-    }
+    # params = {
+    #   "engine": "google",
+    #   "num": "10",
+    #   "api_key": self.serp_api_key
+    # }
     
-    print("="*30)
-    print(f"{hobby} 검색중 ...")
-    params["q"] = f"{hobby.eng_name} beginner tips"
+    # print("="*30)
+    # print(f"{hobby} 검색중 ...")
+    # params["q"] = f"{hobby.eng_name} beginner tips"
 
-    search = serpapi.search(params)
-    search_result = search.as_dict()
+    # search = serpapi.search(params)
+    # search_result = search.as_dict()
 
     # 1. organic_results 우선
-    urls = []
-    if "organic_results" in search_result and search_result["organic_results"]:
-        urls = [result["link"] for result in search_result["organic_results"]]
+    # urls = []
+    # if "organic_results" in search_result and search_result["organic_results"]:
+    #     urls = [result["link"] for result in search_result["organic_results"]]
 
     # 3. 그래도 없으면 안내 메시지
-    if not urls:
-        print("검색 결과에 사용할 수 있는 링크가 없습니다:", search_result)
-        # 예외를 발생시키지 않고, 안내 메시지나 빈 결과로 처리
-        hobby.set_additional_info("검색 결과가 충분하지 않습니다. 구글/유튜브/포럼 등에서 직접 정보를 찾아보세요.")
-        return hobby
+    # if not urls:
+    #     print("검색 결과에 사용할 수 있는 링크가 없습니다:", search_result)
+    #     # 예외를 발생시키지 않고, 안내 메시지나 빈 결과로 처리
+    #     hobby.set_additional_info("검색 결과가 충분하지 않습니다. 구글/유튜브/포럼 등에서 직접 정보를 찾아보세요.")
+    #     return hobby
     
-    loader = UnstructuredURLLoader(urls=urls[:2])
-    data = loader.load()
+    # loader = UnstructuredURLLoader(urls=urls[:2])
+    # data = loader.load()
 
     # text split
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=200,
-        chunk_overlap=50
-    )
+    # text_splitter = RecursiveCharacterTextSplitter(
+    #     chunk_size=200,
+    #     chunk_overlap=50
+    # )
 
-    splits = text_splitter.split_documents(data)
-    print("chunk count : ", len(splits))
+    # splits = text_splitter.split_documents(data)
+    # print("chunk count : ", len(splits))
 
-    batch_size = 100
-    for i in range(0, len(splits), batch_size):
-      batch = splits[i:i+batch_size]
-      PineconeVectorStore.from_documents(
-          batch, 
-          UpstageEmbeddings(model=self.embedding_model), 
-          index_name=self.index_name,
-          namespace="retrieved_docs"
-      )
+    # batch_size = 100
+    # for i in range(0, len(splits), batch_size):
+    #   batch = splits[i:i+batch_size]
+    #   PineconeVectorStore.from_documents(
+    #       batch, 
+    #       UpstageEmbeddings(model=self.embedding_model), 
+    #       index_name=self.index_name,
+    #       namespace="retrieved_docs"
+    #   )
 
     retrieved_vectorstore = PineconeVectorStore(
         embedding=UpstageEmbeddings(model=self.embedding_model),
@@ -176,7 +177,8 @@ class Hobby_recommender:
     )
 
     docs = retriever.invoke(
-        f"Tell me helpful information for {hobby.eng_name} beginners"
+        # f"Tell me helpful information for {hobby.eng_name} beginners"
+        f"Tell me helpful information for surfing beginners"
       )
     docs = [doc.page_content for doc in docs]
 
@@ -257,7 +259,7 @@ class Hobby_recommender:
           print("검색 결과에 사용할 수 있는 링크가 없습니다:", search_result)
           return hobby
       
-      loader = UnstructuredURLLoader(urls=urls[:3], show_progress_bar=True)
+      loader = UnstructuredURLLoader(urls=urls[:1], show_progress_bar=True)
       data = loader.load()
 
       text_splitter = RecursiveCharacterTextSplitter(

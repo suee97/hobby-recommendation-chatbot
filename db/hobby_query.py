@@ -31,7 +31,8 @@ def get_all_hobby_names():
             SELECT name
             FROM hobbies
         """)
-        result = conn.execute(query).fetchall()
+        # result = conn.execute(query).fetchall()
+        result = conn.execute(query).fetchmany(size=3)
         return result
 
 if __name__ == "__main__":

@@ -280,3 +280,9 @@ def get_user_data(token: str):
         "question_count": session_data[3],
         "is_profiling_done": session_data[4]
     }}
+
+# 추가 API: 검색 데이터 업데이트
+@app.get("/db/update")
+def db_update():
+    hobby_recommender.clear_db()
+    hobby_recommender.update_newly_data()
