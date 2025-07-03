@@ -24,7 +24,7 @@ class Hobby_recommender:
     load_dotenv()
 
     # 변수 선언
-    self.embedding_model="embedding-query"
+    self.embedding_model="solar-embedding-1-large-passage"
     self.index_name = "hobby-recommendation-chatbot"
 
     # Pinecone vector store 객체 생성
