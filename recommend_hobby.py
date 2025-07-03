@@ -207,7 +207,7 @@ class Hobby_recommender:
           print("검색 결과에 사용할 수 있는 링크가 없습니다:", search_result)
           return hobby
       
-      loader = UnstructuredURLLoader(urls=urls[:1], show_progress_bar=True)
+      loader = UnstructuredURLLoader(urls=urls[:3], show_progress_bar=True)
       data = loader.load()
 
       text_splitter = RecursiveCharacterTextSplitter(
