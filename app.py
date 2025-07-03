@@ -21,6 +21,10 @@ from util.llm_tools import llm_functions
 
 app = FastAPI() 
 
+@app.get("/")
+def root():
+    return {"message": "FastAPI 서버 정상적으로 실행 중"}
+
 # API KEY 불러오기
 load_dotenv()
 SOLAR_LLM_API_KEY = os.getenv('SOLAR_LLM_API_KEY')
