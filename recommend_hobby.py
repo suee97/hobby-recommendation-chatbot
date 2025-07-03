@@ -37,6 +37,7 @@ class Hobby_recommender:
     self.serp_api_key = serp_api_key
 
   def recommend(self, user_desc, user_hobby):
+    hobby_filter = [user_hobby]
 
     # 1. 사용자 유사도 기반 1차 취미 추천
     first_results = self.pinecone_vectorstore.similarity_search(
@@ -51,11 +52,14 @@ class Hobby_recommender:
     first_recommended_hobbies = [
       Hobby(doc.metadata["hobby"], doc.metadata["hobby_eng"]) for doc in first_results
     ]
+    hobby_filter += [doc.metadata["hobby"] for doc in first_results]
 
     # 2. 취미 유사도 기반 2차 취미 추천
     # 1차 추천된 취미 각각에 대해 하나씩 추가로 추천하기
     second_recommended_hobbies = []
     for hobby in first_recommended_hobbies:
+      print("다음 추천에서 제외될 취미 목록 : ", hobby_filter)
+
       # 현재 hobby의 desc 조회
       hobby_desc = self.pinecone_vectorstore._index.fetch(
         ids=[hobby.eng_name], 
@@ -70,7 +74,7 @@ class Hobby_recommender:
         k=1,
         namespace="hobby_descriptions",
         filter={
-          "hobby" : {"$ne": hobby.name}
+          "hobby" : {"$nin": hobby_filter}
         }
       )[0]
 
@@ -80,9 +84,17 @@ class Hobby_recommender:
       new_hobby.set_desc(second_result.page_content)
       second_recommended_hobbies.append(new_hobby)
 
+      # 필터 대상으로 추가
+      hobby_filter.append(new_hobby.name)
+
+
+
     # 1, 2차 취미 추천 리스트 병합
     recommended_hobbies = first_recommended_hobbies + second_recommended_hobbies
     print("추천 취미 리스트 : ", [hobby.name for hobby in recommended_hobbies])
+
+    for hobby in recommended_hobbies:
+      hobby.set_image(get_hobby_by_name(hobby.name)[0])
 
     return recommended_hobbies
 
@@ -94,9 +106,11 @@ class Hobby_recommender:
 
     # 추천 취미의 추가 정보 조회 
     hobby_info = get_hobby_by_name(hobby.name)
-    hobby.set_desc(hobby_info[0])
-    hobby.set_detail(hobby_info[1])
-    hobby.set_equipments(hobby_info[2])
+
+    hobby.set_image(hobby_info[0])
+    hobby.set_desc(hobby_info[1])
+    hobby.set_detail(hobby_info[2])
+    hobby.set_equipments(hobby_info[3])
 
     # 추천 취미에 도움될 만한 정보 조회(RAG)
     params = {

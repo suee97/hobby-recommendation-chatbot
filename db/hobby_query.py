@@ -1,10 +1,15 @@
 from sqlalchemy import create_engine, text
+from dotenv import load_dotenv
+import os
 
-DB_USER = 'ssafy'
-DB_PASSWORD = 'ssafy'
-DB_HOST = 'localhost'
-DB_PORT = '3306'
-DB_NAME = 'ssafydb'
+load_dotenv()
+
+# MySQL 연결 설정
+DB_USER = os.getenv('DB_USER')
+DB_PASSWORD = os.getenv('DB_PASSWORD') 
+DB_HOST = os.getenv('DB_HOST')
+DB_PORT = os.getenv('DB_PORT')
+DB_NAME = os.getenv('DB_NAME') 
 
 engine = create_engine(
     f'mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}?charset=utf8mb4'
@@ -13,7 +18,7 @@ engine = create_engine(
 def get_hobby_by_name(name: str):
     with engine.connect() as conn:
         query = text("""
-            SELECT description, DetailedDescription, Equipment
+            SELECT image_url, description, DetailedDescription, Equipment
             FROM hobbies
             WHERE name = :name
         """)
@@ -25,6 +30,7 @@ if __name__ == "__main__":
     hobby_name = "등산"  
     res = get_hobby_by_name(hobby_name)
     if res:
+        print(f"image_url: {res.image_url}")
         print(f"Description: {res.description}")
         print(f"DetailedDescription: {res.DetailedDescription}")
         print(f"Equipment: {res.Equipment}")
