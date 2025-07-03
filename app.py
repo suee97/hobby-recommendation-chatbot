@@ -278,6 +278,7 @@ def get_hobby_additional_info(hobby: str):
     hobbyDto.set_desc(hobby_info[1])
     hobbyDto.set_detail(hobby_info[2])
     hobbyDto.set_equipments(hobby_info[3])
+    hobbyDto.set_eng_name(hobby_info[4])
     additional_info = hobby_recommender.search_additional_info(hobby)
     hobbyDto.set_additional_info(additional_info)
     end = time.perf_counter()

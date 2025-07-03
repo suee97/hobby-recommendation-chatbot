@@ -183,8 +183,7 @@ class Hobby_recommender:
     )
 
     docs = retriever.invoke(
-        # f"Tell me helpful information for {hobby.eng_name} beginners"
-        f"Tell me helpful information for surfing beginners"
+        f"Tell me helpful information for {hobby.eng_name} beginners"
       )
     docs = [doc.page_content for doc in docs]
 
