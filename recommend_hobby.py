@@ -16,6 +16,7 @@ from langchain_upstage import ChatUpstage
 
 from dto.hobby import Hobby
 from db.hobby_query import get_hobby_by_name
+from db.hobby_query import get_all_hobby_names
 
 
 class Hobby_recommender:
@@ -217,3 +218,64 @@ class Hobby_recommender:
 
     # 5. 최종 반환 데이터 정제 및 반환
     return hobby
+  
+  # vector db clear 함수
+  def clear_db(self):
+    print("Pinecone vector db clear")
+    stats = self.pinecone_vectorstore._index.describe_index_stats()
+    print("clear 이전: ")
+    print(stats)
+    if "retrieved_docs" in stats["namespaces"]:
+      self.pinecone_vectorstore._index.delete(delete_all=True, namespace="retrieved_docs")
+      print("retrieved_docs 네임스페이스 삭제 완료")
+    stats = self.pinecone_vectorstore._index.describe_index_stats()
+    print("clear 이후: ")
+    print(stats)
+
+  # 모든 취미를 가져와서 vector db에 넣는 함수
+  def update_newly_data(self):
+    hobbiesTuple = get_all_hobby_names()
+    hobbies = [item[0] for item in hobbiesTuple]
+
+    for hobby in hobbies:
+      params = {
+        "engine": "google",
+        "num": "10",
+        "api_key": self.serp_api_key
+      }
+      print(f"{hobby} 검색중 ... ")
+      params["q"] = f"{hobby} beginner tips"
+
+      search = serpapi.search(params)
+      search_result = search.as_dict()
+
+      urls = []
+      if "organic_results" in search_result and search_result["organic_results"]:
+          urls = [result["link"] for result in search_result["organic_results"]]
+
+      if not urls:
+          print("검색 결과에 사용할 수 있는 링크가 없습니다:", search_result)
+          return hobby
+      
+      loader = UnstructuredURLLoader(urls=urls[:1], show_progress_bar=True)
+      data = loader.load()
+
+      text_splitter = RecursiveCharacterTextSplitter(
+          chunk_size=200,
+          chunk_overlap=50
+      )
+      splits = text_splitter.split_documents(data)
+      print("chunk count : ", len(splits))
+
+      batch_size = 100
+      for i in range(0, len(splits), batch_size):
+        batch = splits[i:i+batch_size]
+        PineconeVectorStore.from_documents(
+            batch, 
+            UpstageEmbeddings(model=self.embedding_model), 
+            index_name=self.index_name,
+            namespace="retrieved_docs"
+        )
+      stats = self.pinecone_vectorstore._index.describe_index_stats()
+      print("update 이후: ")
+      print(stats)
