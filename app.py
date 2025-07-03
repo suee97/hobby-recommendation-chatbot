@@ -6,6 +6,7 @@
 # 추가: .env 파일에 SOLAR_LLM_API_KEY = '받은 API KEY' 추가해주세요.
 
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 import json
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
@@ -20,6 +21,8 @@ from hobby_service import HobbyRecommendationService
 from util.llm_tools import llm_functions
 
 app = FastAPI() 
+
+app.mount("/static", StaticFiles(directory="/app/static"), name="static")
 
 @app.on_event("startup")
 async def startup_event():
