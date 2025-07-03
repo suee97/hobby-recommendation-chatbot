@@ -25,6 +25,15 @@ def get_hobby_by_name(name: str):
         result = conn.execute(query, {"name": name}).fetchone()
         return result
 
+def get_all_hobby_names():
+    with engine.connect() as conn:
+        query = text("""
+            SELECT name
+            FROM hobbies
+        """)
+        result = conn.execute(query).fetchall()
+        return result
+
 if __name__ == "__main__":
     # 테스트용
     hobby_name = "등산"  
