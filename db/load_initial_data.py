@@ -70,6 +70,7 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS hobbies (
     hobby_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255),
+    eng_name VARCHAR(255),
     image_url VARCHAR(500),
     description TEXT,
     Active FLOAT,
