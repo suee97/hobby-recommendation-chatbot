@@ -55,7 +55,7 @@ app.add_middleware(
 # 'python app.py' 실행시 서버 열도록 하는 코드
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("app:app", host="0.0.0.0", port=8080, reload=True)
 
 # 세션 관리 - 기존 구조 유지하되 취미 추천 데이터 추가
 chat_storage = {
