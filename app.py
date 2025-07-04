@@ -5,21 +5,25 @@
 # 가상환경 설정이 필요하다면 notion의 python 가상환경 설정을 참고해주세요.
 # 추가: .env 파일에 SOLAR_LLM_API_KEY = '받은 API KEY' 추가해주세요.
 
+import os, random, string, json, time, json
 from fastapi import FastAPI
-import json
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from openai import OpenAI
 from pydantic import BaseModel
-import os, random, string
 from datetime import datetime, timedelta
 from recommend_hobby import Hobby_recommender
 
 # 새로 추가된 모듈 import
 from hobby_service import HobbyRecommendationService
 from util.llm_tools import llm_functions
+from recommend_hobby import get_hobby_by_name
+from dto.hobby import Hobby
 
 app = FastAPI() 
+
+app.mount("/static", StaticFiles(directory="./static"), name="static")
 
 @app.on_event("startup")
 async def startup_event():
@@ -85,6 +89,7 @@ def generate_token():
         session_data[1] = datetime.now()  # timestamp 설정
         chat_storage[token] = session_data
     return {"statusCode": 200, "data": {"token": token}}
+
 
 @app.post("/chat")
 def chat_post(req: ChatRequestModel):
@@ -160,21 +165,6 @@ def chat_post(req: ChatRequestModel):
     answer = json.loads(response.choices[0].message.content)
     print(answer)
 
-    # answer = ''
-    # for chunk in stream:
-    #     if chunk.choices[0].delta.content is not None:
-    #         answer += chunk.choices[0].delta.content
-    # print(answer)
-    # arguments_str = response.choices[0].message.function_call.arguments
-    # result = json.loads(arguments_str)
-    
-    # =================== [ AI 답변 확인 코드 ] ===================
-    # print("\n" + "="*60)
-    # print("🤖 AI의 원본 답변:", answer)
-    # print("="*60 + "\n")
-    # ==========================================================
-
-
     # AI 응답을 히스토리에 추가
     history.append({"role": "assistant", "content": answerStr})
 
@@ -188,83 +178,42 @@ def chat_post(req: ChatRequestModel):
                 "is_complete": answer["is_completed"]
             }
         }
-
-    # if response_data:
-    #     # 사용자 데이터 업데이트
-    #     if "user_data" in response_data:
-    #         session_data[2].update(response_data["user_data"])
-    #     # 질문 카운트 업데이트
-    #     if "question_count" in response_data:
-    #         session_data[3] = response_data["question_count"]
-    #     # 완료 상태 업데이트
-    #     if "is_complete" in response_data:
-    #         session_data[4] = response_data["is_complete"]
-    # else:
-    #     # 파싱 실패 시 예외 처리 (예: 사용자에게 재질문 유도)
-    #     response_data = {"is_complete": False, "message": "죄송해요, 답변을 이해하지 못했어요. 다시 한번 말씀해주시겠어요?"}
-    #     summary = ""
-    #     recommended_hobby = ""
     
-    # # 타임스탬프 업데이트
-    # session_data[1] = datetime.now()
-
-    
-
-
-    # 대화 종료 전
-    # if ["is_complete"] is not None and not response_data["is_complete"]:
-    #     return {"statusCode": 200, "data": {
-    #         "response_data": response_data,
-    #         "message": response_data["message"],
-    #         "is_complete": response_data["is_complete"],
-    #         "summary": summary,
-    #         "recommended_hobby": recommended_hobby,
-    #     }}
-    
-    # 대화 종료
-    # else:
     recommend_req = HobbyRecommenderModel(
         token=req.token,
         user_desc=answer["summary"],
         user_hobby= answer["recommended_hobby"]
     )
-    print("취미 추천 시작")
+    print(f"-- 성향 파악 완료, 취미 추천 시작 (취미 썸네일만 해당)")
+    start = time.perf_counter()
     result = recommend_post(recommend_req)
+    end = time.perf_counter()
+    print(f"-- 취미 추천 실행 시간: {end - start:.4f}초")
     return {"statusCode": 200, "data": {"recommend_result": result}}
-
-
     
 
 @app.post("/recommend-hobby")
 def recommend_post(req: HobbyRecommenderModel):
-    # 토큰 존재하는지 확인, 없으면 에러
-    # if req.token not in chat_storage:
-    #     return {"statusCode": 400, "errorMessage": "서버에 존재하지 않는 토큰입니다."}
     result = hobby_recommender.recommend(req.user_desc, req.user_hobby)
-
-
     return result
-    # 응답 데이터 구성
-    response = {
-        "answer": answer,
-        "user_data": session_data[2],
-        "question_count": session_data[3],
-        "is_profiling_done": session_data[4]
-    }
-    
-    # 완료된 경우 추가 정보 포함
-    if summary:
-        response["summary"] = summary
-    if recommended_hobby:
-        response["recommended_hobby"] = recommended_hobby
-
-    return {"statusCode": 200, "data": response}
 
 
 @app.get("/recommend-hobby/{hobby}")
 def get_hobby_additional_info(hobby: str):
-    result = hobby_recommender.search_additional_info(hobby)
-    return result
+    print(f"-- {hobby} 정보 조회 및 RAG 시작")
+    start = time.perf_counter()
+    hobbyDto = Hobby(hobby, None)
+    hobby_info = get_hobby_by_name(hobby)
+    hobbyDto.set_image(hobby_info[0])
+    hobbyDto.set_desc(hobby_info[1])
+    hobbyDto.set_detail(hobby_info[2])
+    hobbyDto.set_equipments(hobby_info[3])
+    hobbyDto.set_eng_name(hobby_info[4])
+    additional_info = hobby_recommender.search_additional_info(hobby)
+    hobbyDto.set_additional_info(additional_info)
+    end = time.perf_counter()
+    print(f"-- {hobby} 정보 조회 및 RAG 끝: {end - start:.4f}초")
+    return hobbyDto
 
 
 # 추가 API: 사용자 데이터 조회
@@ -280,3 +229,10 @@ def get_user_data(token: str):
         "question_count": session_data[3],
         "is_profiling_done": session_data[4]
     }}
+
+
+# 추가 API: 검색 데이터 업데이트
+@app.get("/db/update")
+def db_update():
+    hobby_recommender.clear_db()
+    hobby_recommender.update_newly_data()

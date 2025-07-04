@@ -18,11 +18,20 @@ engine = create_engine(
 def get_hobby_by_name(name: str):
     with engine.connect() as conn:
         query = text("""
-            SELECT image_url, description, DetailedDescription, Equipment
+            SELECT image_url, description, DetailedDescription, Equipment, eng_name
             FROM hobbies
             WHERE name = :name
         """)
         result = conn.execute(query, {"name": name}).fetchone()
+        return result
+
+def get_all_hobby_names():
+    with engine.connect() as conn:
+        query = text("""
+            SELECT name, eng_name
+            FROM hobbies
+        """)
+        result = conn.execute(query).fetchall()
         return result
 
 if __name__ == "__main__":
