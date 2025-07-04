@@ -141,6 +141,7 @@ class Hobby_recommender:
     Important:
     - Never include error messages, access denied notices, advertisements, or irrelevant text (for example: 'on this server', 'Access Denied', 'Reference #', 'Forbidden', 'Not Found', etc.) in your answer.
     - Only summarize and deliver information that is genuinely helpful for beginners.
+    - You must format your entire response using only valid Markdown syntax.
     """
     
     user = """
