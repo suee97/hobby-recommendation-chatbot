@@ -5,6 +5,8 @@
 
 ---
 
+원본 레포지토리 주소: https://github.com/hobby-recommendation-chatbot/backend
+
 ### TEAM  
 - 김민주 : https://github.com/KimMinjuAstro  
 - 김준혁 : https://github.com/peridot0810  
